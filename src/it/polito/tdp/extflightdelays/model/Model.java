@@ -72,6 +72,13 @@ public class Model {
 		  return result;
 	}
 	
+	/*
+	 * Da rifare .. non è vero che passa il maggior numero di citta
+	 *   
+	 *   Credo sia oportuno un algoritmo ricorsivo ad HOC oppure uno degli algoritmi 'speciali'
+	 * 
+	 */
+	
 	public Map<List<Airport>, Double> cercaCammino(Airport partenza, int max){
 		
 		DijkstraShortestPath<Airport, DefaultWeightedEdge> dijkstra = new DijkstraShortestPath<>(grafo);
