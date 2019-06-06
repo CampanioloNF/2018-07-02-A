@@ -3,6 +3,7 @@ package it.polito.tdp.extflightdelays.model;
 import java.time.LocalDateTime;
 
 public class Flight {
+ 
 
 	private int id;
 	private int airlineId;

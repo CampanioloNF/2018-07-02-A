@@ -14,6 +14,7 @@ import java.util.ResourceBundle;
 
 import it.polito.tdp.extflightdelays.model.Airport;
 import it.polito.tdp.extflightdelays.model.Model;
+import it.polito.tdp.extflightdelays.model.Path;
 import it.polito.tdp.extflightdelays.model.Rotta;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -112,19 +113,20 @@ public class ExtFlightDelaysController {
        	  
        	  try {
        		  
-       		Map<List<Airport>, Double> result = model.cercaCammino(airport, Integer.parseInt(input));
+       		Path result = model.cercaCammino(airport, Integer.parseInt(input));
        		
-       		for(Entry<List<Airport>, Double> entry : result.entrySet()) {
+       		
        			
-       			    txtResult.appendText("Il cammino prevede i seguenti Airport ("+entry.getKey().size()+"): \n");
+       			    txtResult.appendText("Il cammino prevede i seguenti Airport ("+result.getSize()+"): \n");
        			   
-       			for(Airport a : entry.getKey()) {
+       			for(Airport a : result.getCammino()) {
        				txtResult.appendText(a+"\n");
        			}
        			
-       			    txtResult.appendText("Il cammino totale è lungo: "+entry.getValue()+" miglia");
+       			    txtResult.appendText("Il cammino totale è lungo: "+result.getPeso()+" miglia");
        			
-       		}
+       		
+       			    
        		
        		  
        	  }catch(NumberFormatException nfe) {

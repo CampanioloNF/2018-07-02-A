@@ -2,6 +2,7 @@ package it.polito.tdp.extflightdelays.model;
 
 public class Airport implements Comparable<Airport> {
 	
+	
 	private int id;
 	private String iataCode;
 	private String airportName;

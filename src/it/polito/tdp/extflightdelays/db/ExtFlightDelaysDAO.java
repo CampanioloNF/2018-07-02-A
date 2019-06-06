@@ -170,6 +170,7 @@ public class ExtFlightDelaysDAO {
 					
 					Graphs.addEdge(grafo, origine, destinazione,rs.getDouble("distanzaMedia") );
 					rotte.add(new Rotta(origine, destinazione, rs.getDouble("distanzaMedia")));
+					
 				}
 					
 				

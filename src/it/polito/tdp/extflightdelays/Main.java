@@ -18,7 +18,7 @@ public class Main extends Application {
 			
 			Model model = new Model() ;
 			controller.setModel(model);
-			
+			 
 			
 			Scene scene = new Scene(root);
 			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());

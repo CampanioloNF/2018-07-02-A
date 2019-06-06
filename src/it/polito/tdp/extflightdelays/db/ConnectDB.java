@@ -13,6 +13,7 @@ public class ConnectDB {
 	
 	public static Connection getConnection() {
 		
+		
 		if (ds == null) {
 			HikariConfig config = new HikariConfig();
 			config.setJdbcUrl(jdbcURL);

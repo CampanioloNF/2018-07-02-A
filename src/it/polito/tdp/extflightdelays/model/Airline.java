@@ -6,6 +6,7 @@ public class Airline {
 	private String iataCode;
 	private String airlineName;
 	
+	
 	public Airline(int id, String iataCode, String airlineName) {
 		this.id = id;
 		this.iataCode = iataCode;

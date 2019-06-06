@@ -8,6 +8,7 @@ public class Rotta implements Comparable<Rotta> {
 	
 	
 	
+	
 	public Rotta(Airport origine, Airport destinazione, double avg) {
 	
 		this.origine = origine;

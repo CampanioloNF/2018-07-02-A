@@ -3,14 +3,15 @@ package it.polito.tdp.extflightdelays.model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
+import java.util.PriorityQueue;
+import java.util.Set;
 
 import org.jgrapht.Graph;
-import org.jgrapht.GraphPath;
-import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
+import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
@@ -22,6 +23,12 @@ public class Model {
 	private ExtFlightDelaysDAO dao;
 	private Map<Integer, Airport> idAirportMap;
     private List<Rotta> rotte;
+    
+    //parametri ricorsione
+   
+    private int max;
+    private  Path result; 
+    
 	
 	public Model() {
 		
@@ -72,54 +79,114 @@ public class Model {
 		  return result;
 	}
 	
+	
+	public Path cercaCammino(Airport partenza, int max){
+		
 	/*
-	 * Da rifare .. non è vero che passa il maggior numero di citta
-	 *   
-	 *   Credo sia oportuno un algoritmo ricorsivo ad HOC oppure uno degli algoritmi 'speciali'
+	 * Tale metodo ricorsivo deve andare a creare una lista di Airport.
+	 * Possiamo creare un oggetto che chiamiamo Path.
+	 * 
+	 * Tale oggetto sarà la soluzione parziale che si andrà riempiendo con la lista di Airport 
+	 * Possiamo inoltre dotarlo di un metodo che ci dica quanto è pesante tale cammino in termini di miglia
+	 * Tale metodo potrebbe interagire con le rotte, presenti nel model e ricavare dunque il punteggio
 	 * 
 	 */
+
+		
 	
-	public Map<List<Airport>, Double> cercaCammino(Airport partenza, int max){
+	 this.max = max;
+	 
+      
+	;
+	 
+	 //Creiamo il parziale
+	  
+	    
+	    Path parziale = new Path(this, partenza);
+	    
+	    result = parziale;
+	    
+	    cerca(parziale);
 		
-		DijkstraShortestPath<Airport, DefaultWeightedEdge> dijkstra = new DijkstraShortestPath<>(grafo);
-		
-		Map<List<Airport>, Double> result = new HashMap<>();
-		int best = 0;
-		
-		for(Airport a : grafo.vertexSet()) {
-			
-			//per ogni aereoporto 
-			
-			if(!a.equals(partenza)) {
-				
-				//diverso da quello di partenza
-				
-				//cerco un cammino minimo
-			  GraphPath<Airport, DefaultWeightedEdge> cammino = dijkstra.getPath(partenza, a);
-			    // e ne salvo il peso
-			  double pesoCammino = dijkstra.getPathWeight(partenza, a);
-			  List<Airport> aCamm = cammino.getVertexList();
-			  
-			  //se il peso è minore della condizione iniziale
-			  if(pesoCammino<max) {
-				  
-				  //se il cammino è più lungo dei precedenti
-				  if(aCamm.size()>best) {
-					  //lo salvo
-					 if(!result.isEmpty())
-					     result.clear();
-				      result.put(aCamm, pesoCammino);
-				      best = aCamm.size();
-				  }
-			  }
-			  
-			}
-		}
-		   
 		
 		
 		return result;
+	}
+
+	
+	private void cerca(Path parziale) {
+
 		
+		//condizione di terminazione
+		if(parziale.getPeso()>max) {
+			
+			//il parziale che ci interessa
+			parziale.removeLast();
+			if(parziale.getSize()>result.getSize()) 
+				result = parziale;
+			
+			return;
+		}
+		
+		//Considero l'aereoporto dove sono
+		Airport aereoporto = parziale.getLast();
+		boolean over = true;
+		
+		//cerco tra tutti i vicini
+		for(Airport vicino : cercaVicini(aereoporto)) {
+			
+	           if(!parziale.contains(vicino)) {
+	        	   
+	        	   over=false;
+	        	   //se il parziale non contiene il vicino vado la 
+	        	   
+	        	   parziale.add(vicino);
+	        	   
+	        	   //se non ho superato il limite continuo
+	        	   cerca(parziale);
+	        	   
+	        	   //torno indietro
+	        	   parziale.removeLast();
+	        	  
+	           }
+	         }
+		
+		if(over) {
+			if(parziale.getSize()>result.getSize()) 
+				result = parziale;			
+			return;
+		}
+			
+	}
+		
+	
+
+	public double calcolaPeso(List<Airport> cammino) {
+		
+		double peso = 0.0;
+		
+		for(int i= 0; i<cammino.size()-1; i++) {
+			
+			peso+=pesoRotta(cammino.get(i), cammino.get(i+1));
+		}
+		
+		return peso;
+	}
+
+	private double pesoRotta(Airport a1, Airport a2) {
+
+		for(Rotta rotta : rotte) {
+			if(rotta.getOrigine().equals(a1) && rotta.getDestinazione().equals(a2))
+				return rotta.getAvg();
+			else if(rotta.getOrigine().equals(a2) && rotta.getDestinazione().equals(a1))
+				return rotta.getAvg();
+		}
+
+		return 0;
 	}
 	
+	private List<Airport> cercaVicini(Airport a){
+		
+		return Graphs.neighborListOf(grafo, a);
+	}
 }
