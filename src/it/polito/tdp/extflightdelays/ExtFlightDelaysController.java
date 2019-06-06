@@ -7,9 +7,14 @@
 package it.polito.tdp.extflightdelays;
 
 import java.net.URL;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.extflightdelays.model.Airport;
 import it.polito.tdp.extflightdelays.model.Model;
+import it.polito.tdp.extflightdelays.model.Rotta;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -37,7 +42,7 @@ public class ExtFlightDelaysController {
     private Button btnAnalizza; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbBoxAeroportoPartenza"
-    private ComboBox<?> cmbBoxAeroportoPartenza; // Value injected by FXMLLoader
+    private ComboBox<Airport> cmbBoxAeroportoPartenza; // Value injected by FXMLLoader
 
     @FXML // fx:id="btnAeroportiConnessi"
     private Button btnAeroportiConnessi; // Value injected by FXMLLoader
@@ -51,15 +56,86 @@ public class ExtFlightDelaysController {
     @FXML
     void doAnalizzaAeroporti(ActionEvent event) {
 
+    	  cmbBoxAeroportoPartenza.getItems().clear();
+    	
+          String input = distanzaMinima.getText();
+          if(input!=null) {
+        	  
+        	  try {
+        		  
+        		  model.creaGrafo(Integer.parseInt(input));
+        		  this.cmbBoxAeroportoPartenza.getItems().addAll(model.getListAirport());
+        		  
+        	  }catch(NumberFormatException nfe) {
+        		  txtResult.appendText("Si prega di inserire una distanza minima (numero intero), grazie");
+        		  return;
+        	  }
+        	  
+        	  
+          }else {
+        	  txtResult.appendText("Si prega di inserire una distanza minima (numero intero), grazie");
+          }
     }
 
     @FXML
     void doCalcolaAeroportiConnessi(ActionEvent event) {
 
+    	txtResult.clear();
+    	
+    	Airport input = cmbBoxAeroportoPartenza.getValue();
+    	
+    	if(input!=null) {
+    		
+    		for(Rotta ap : model.getViciniPerDistanza(input)) {
+    			if(ap.getDestinazione().equals(input))
+    				txtResult.appendText(ap.getOrigine() + "  " + "( "+(double)(Math.round(ap.getAvg()*100))/100+" )\n" );
+    			else
+    				txtResult.appendText(ap.getDestinazione() + "  " + "( "+(double)(Math.round(ap.getAvg()*100))/100+" )\n" );
+    		}
+    			
+    		
+    	}else
+    		  txtResult.appendText("Si prega di inserire un aereoporto, grazie");
+    	
     }
 
     @FXML
     void doCercaItinerario(ActionEvent event) {
+    	
+    	txtResult.clear();
+    	
+    	String input = numeroVoliTxtInput.getText();
+    	Airport airport = cmbBoxAeroportoPartenza.getValue();
+    	
+    	 if(input!=null && airport!=null ) {
+    		 
+       	  
+       	  try {
+       		  
+       		Map<List<Airport>, Double> result = model.cercaCammino(airport, Integer.parseInt(input));
+       		
+       		for(Entry<List<Airport>, Double> entry : result.entrySet()) {
+       			
+       			    txtResult.appendText("Il cammino prevede i seguenti Airport ("+entry.getKey().size()+"): \n");
+       			   
+       			for(Airport a : entry.getKey()) {
+       				txtResult.appendText(a+"\n");
+       			}
+       			
+       			    txtResult.appendText("Il cammino totale è lungo: "+entry.getValue()+" miglia");
+       			
+       		}
+       		
+       		  
+       	  }catch(NumberFormatException nfe) {
+       		  txtResult.appendText("Si prega di inserire una distanza massima (numero intero) e selezionare un aereoporto, grazie");
+       		  return;
+       	  }
+       	  
+       	  
+         }else {
+       	  txtResult.appendText("Si prega di inserire una distanza massima (numero intero) e selezionare un aereoporto, grazie");
+         }
 
     }
 
