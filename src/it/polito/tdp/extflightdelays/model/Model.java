@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
 import java.util.Set;
 
 import org.jgrapht.Graph;
@@ -23,11 +22,13 @@ public class Model {
 	private ExtFlightDelaysDAO dao;
 	private Map<Integer, Airport> idAirportMap;
     private List<Rotta> rotte;
+    private Map<Airport, List<Airport>> vicini;
     
     //parametri ricorsione
    
     private int max;
     private  Path result; 
+    private Set<Airport> visitati ; //serve per tenere traccia degli aereoporti che tolgo dal parziale (gia considerati)
     
 	
 	public Model() {
@@ -40,6 +41,7 @@ public class Model {
 		
 		this.grafo = new SimpleWeightedGraph<Airport, DefaultWeightedEdge>(DefaultWeightedEdge.class);
 		this.idAirportMap = new HashMap<Integer, Airport>();
+		this.vicini = new HashMap<>();
 		this.rotte = new ArrayList<>();
 	
 		//aggiungo simultaneamente archi e vertici con un metodo dao 
@@ -47,6 +49,10 @@ public class Model {
 		
 		dao.loadGraph(idAirportMap,rotte,grafo,distanza);	
 		
+		//mappo i vicini
+		for(Airport a : grafo.vertexSet()) {
+			vicini.put(a, Graphs.neighborListOf(grafo, a));
+		}
 	}
 
 	public List<Airport> getListAirport(){
@@ -65,6 +71,7 @@ public class Model {
 	
 	public List<Rotta> getViciniPerDistanza(Airport cerca){
 		
+		//forse tale metodo può essere sostituito
 		
 		List<Rotta> result = new LinkedList<>();
 		for(Rotta rotta: rotte) {
@@ -73,8 +80,6 @@ public class Model {
 		}
 		
 		Collections.sort(result);
-		
-		
 		
 		  return result;
 	}
@@ -86,7 +91,7 @@ public class Model {
 	 * Tale metodo ricorsivo deve andare a creare una lista di Airport.
 	 * Possiamo creare un oggetto che chiamiamo Path.
 	 * 
-	 * Tale oggetto sarà la soluzione parziale che si andrà riempiendo con la lista di Airport 
+	 * Tale oggetto sarà la soluzione parziale dove si andrà riempiendo con la lista di Airport 
 	 * Possiamo inoltre dotarlo di un metodo che ci dica quanto è pesante tale cammino in termini di miglia
 	 * Tale metodo potrebbe interagire con le rotte, presenti nel model e ricavare dunque il punteggio
 	 * 
@@ -96,15 +101,13 @@ public class Model {
 	
 	 this.max = max;
 	 
-      
-	;
-	 
 	 //Creiamo il parziale
 	  
 	    
 	    Path parziale = new Path(this, partenza);
 	    
-	    result = parziale;
+	    result = new Path(parziale);
+	    visitati = new HashSet<>();
 	    
 	    cerca(parziale);
 		
@@ -114,52 +117,93 @@ public class Model {
 	}
 
 	
+	
 	private void cerca(Path parziale) {
 
+		//il concetto di base è che quando si toglie la partenza ho concluso perchè ho provato tutto
+		while(!parziale.isEmpty()) {
 		
-		//condizione di terminazione
-		if(parziale.getPeso()>max) {
-			
-			//il parziale che ci interessa
-			parziale.removeLast();
-			if(parziale.getSize()>result.getSize()) 
-				result = parziale;
-			
-			return;
+		//Arrivo in un nuovo aereoporto (mai visitato prima (?) ) e mi chiedo dove possa andare
+		Airport aereoporto = parziale.getLast();
+	
+		while(visitaInProfondita(visitati, parziale));
+		
+		//ritorna false se l'aereoporta sopra considerato è stato completamente esplorato!
+		//in tal caso è necessario toglierlo dalla dal parziale e re-iterare
+		
+		if(parziale.getSize()>result.getSize()) {
+			result = new Path(parziale);
+			System.out.format("%.2f max : %d\n",  parziale.getPeso(), max);
+		}
+		parziale.remove(aereoporto);
+		//siamo tornati indietro di un aereoporto
+		
+		//aggiungo ai visitati solo quelli che rimuovo e da cui dunque non devo più passare
+		// dal momento che esploro in profondità
+		
+		visitati.add(aereoporto);
+		
 		}
 		
-		//Considero l'aereoporto dove sono
-		Airport aereoporto = parziale.getLast();
-		boolean over = true;
+	} 
+      			
+	// metodo a cui passo il parziale e una lista di visitati e mi dice dove posso ancora visitare
+	
+	private boolean visitaInProfondita(Set<Airport> visitati, Path parziale ) {
 		
-		//cerco tra tutti i vicini
-		for(Airport vicino : cercaVicini(aereoporto)) {
+		
+		
+		//chiamo questo metodo per vedere tra tutti i vicini quali sia quello dove posso andare 
+		
+		//Questo è il metod di visita in profondita
+		
+		for(Airport vicino : vicini.get(parziale.getLast())) {
 			
-	           if(!parziale.contains(vicino)) {
+			
+			//non posso tornare indietro e se ho già visitato un vicino non torno a visitarlo
+	           
+			      if(!parziale.contains(vicino) && !visitati.contains(vicino)) {
 	        	   
-	        	   over=false;
-	        	   //se il parziale non contiene il vicino vado la 
-	        	   
-	        	   parziale.add(vicino);
-	        	   
-	        	   //se non ho superato il limite continuo
+	        	  
+	        	   // valuto se posso realmente andare a visitare il vicino senza sforare con le miglia
+	        	   if(calcolaPesoCon(parziale,vicino)<max) {
+	        	  
+	        		//se posso visitare il vicino lo aggiungo   
+	                parziale.add(vicino);
+	        	        
+	        	   // vado in profondità
 	        	   cerca(parziale);
 	        	   
-	        	   //torno indietro
-	        	   parziale.removeLast();
-	        	  
+	        	 }
+	        	   
+	        	   //se non posso andare avanti in profondità cerco un altro vicino attraverso il quale possa andare in profondità
+	        	   
 	           }
 	         }
 		
-		if(over) {
-			if(parziale.getSize()>result.getSize()) 
-				result = parziale;			
-			return;
-		}
-			
-	}
+		//se non ho più vicini disponibili devo tornare indietro..
 		
+		return false;
+		
+	}
 	
+
+	private double calcolaPesoCon(Path parziale, Airport vicino) {
+		
+		
+		if(parziale.getSize()==1)
+			return 0.0;
+		
+		List<Airport> cammino = new ArrayList<>(parziale.getCammino());
+		cammino.add(vicino);
+		
+		
+		return this.calcolaPeso(cammino);
+	}
+
+	public List<Rotta> getRotte() {
+		return rotte;
+	}
 
 	public double calcolaPeso(List<Airport> cammino) {
 		
@@ -173,20 +217,19 @@ public class Model {
 		return peso;
 	}
 
+	//dati due aereporti mi ricavo il peso dell'arco fra essi
 	private double pesoRotta(Airport a1, Airport a2) {
 
-		for(Rotta rotta : rotte) {
-			if(rotta.getOrigine().equals(a1) && rotta.getDestinazione().equals(a2))
-				return rotta.getAvg();
-			else if(rotta.getOrigine().equals(a2) && rotta.getDestinazione().equals(a1))
-				return rotta.getAvg();
-		}
+		DefaultWeightedEdge dwe1 = grafo.getEdge(a1, a2);
+		DefaultWeightedEdge dwe2 = grafo.getEdge(a2, a1);
+		
+		if(dwe1==null)
+		     return grafo.getEdgeWeight(dwe2);
+		  return grafo.getEdgeWeight(dwe1);
 
-		return 0;
 	}
 	
-	private List<Airport> cercaVicini(Airport a){
+	
 		
-		return Graphs.neighborListOf(grafo, a);
-	}
+	
 }

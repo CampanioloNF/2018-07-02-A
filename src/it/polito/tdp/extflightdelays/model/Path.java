@@ -1,6 +1,7 @@
 package it.polito.tdp.extflightdelays.model;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class Path {
@@ -23,8 +24,8 @@ public class Path {
 	public Path(Model model, Airport partenza) {
 		
 		this.model = model;
-		this.peso = 0;
-		this.cammino = new ArrayList<>();
+		this.peso = 0.0;
+		this.cammino = new LinkedList<>();
 		this.cammino.add(partenza);
 	}
 
@@ -33,10 +34,9 @@ public class Path {
 	}
 
 	public double getPeso() {
-		
+		     if(cammino.size()>1)
 	      this.peso = model.calcolaPeso(cammino);
-		
-		return peso;
+			return peso;
 	}
 
 	//vi sarà un metodo per riconoscere il peso del Path
@@ -77,6 +77,16 @@ public class Path {
 		
 		return cammino.size();
 	}
+
+	public boolean isEmpty() {
+		
+		if(this.getSize()==0)
+			return true;
+		
+		return false;
+	}
+
+	
 
 	
 }
