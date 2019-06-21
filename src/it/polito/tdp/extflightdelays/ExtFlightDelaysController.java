@@ -114,9 +114,6 @@ public class ExtFlightDelaysController {
        	  try {
        		  
        		Path result = model.cercaCammino(airport, Integer.parseInt(input));
-       		
-       		
-       			
        			    txtResult.appendText("Il cammino prevede i seguenti Airport ("+result.getSize()+"): \n");
        			   
        			for(Airport a : result.getCammino()) {

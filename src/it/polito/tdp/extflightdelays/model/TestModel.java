@@ -16,9 +16,13 @@ public class TestModel {
 		  
 		    System.out.println(""+cammino.getSize()+"\n");
 		    
-		    for(Airport a1 : cammino.getCammino()) {
-		    	System.out.println(a1);
-		    }
+		    
+		    
+		    Path cammino2 = model.cercaCammino(a, 100000);
+			  
+		    System.out.println(""+cammino2.getSize()+"\n");
+		   
+		    
 	}
 
 }

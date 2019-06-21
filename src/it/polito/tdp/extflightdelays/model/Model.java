@@ -25,10 +25,11 @@ public class Model {
     private Map<Airport, List<Airport>> vicini;
     
     //parametri ricorsione
+    private Set<Airport> visitati ; //serve per tenere traccia degli aereoporti che tolgo dal parziale (gia considerati)
    
     private int max;
     private  Path result; 
-    private Set<Airport> visitati ; //serve per tenere traccia degli aereoporti che tolgo dal parziale (gia considerati)
+   
     
 	
 	public Model() {
@@ -95,11 +96,10 @@ public class Model {
 	 * Possiamo inoltre dotarlo di un metodo che ci dica quanto è pesante tale cammino in termini di miglia
 	 * Tale metodo potrebbe interagire con le rotte, presenti nel model e ricavare dunque il punteggio
 	 * 
-	 */
-
-		
+	 */	
 	
 	 this.max = max;
+	 
 	 
 	 //Creiamo il parziale
 	  
@@ -107,11 +107,11 @@ public class Model {
 	    Path parziale = new Path(this, partenza);
 	    
 	    result = new Path(parziale);
+	    
+	    //all'inizio non ho visitato nessun aereoporto
 	    visitati = new HashSet<>();
 	    
 	    cerca(parziale);
-		
-		
 		
 		return result;
 	}
@@ -126,7 +126,7 @@ public class Model {
 		//Arrivo in un nuovo aereoporto (mai visitato prima (?) ) e mi chiedo dove possa andare
 		Airport aereoporto = parziale.getLast();
 	
-		while(visitaInProfondita(visitati, parziale));
+		while(visitaInProfondita(visitati,parziale));
 		
 		//ritorna false se l'aereoporta sopra considerato è stato completamente esplorato!
 		//in tal caso è necessario toglierlo dalla dal parziale e re-iterare
@@ -135,12 +135,12 @@ public class Model {
 			result = new Path(parziale);
 			System.out.format("%.2f max : %d\n",  parziale.getPeso(), max);
 		}
+		
 		parziale.remove(aereoporto);
 		//siamo tornati indietro di un aereoporto
 		
 		//aggiungo ai visitati solo quelli che rimuovo e da cui dunque non devo più passare
 		// dal momento che esploro in profondità
-		
 		visitati.add(aereoporto);
 		
 		}
