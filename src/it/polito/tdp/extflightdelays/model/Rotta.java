@@ -6,8 +6,11 @@ public class Rotta implements Comparable<Rotta> {
 	private Airport destinazione;
 	private double avg;
 	
-	
-	
+  /*
+   * Semplice classe che identifica l'arco
+   * Tuttavia .. origine e destinazione non sono tecnicamente corretti dal momento che il grafo non è orientatp
+   * e dipende dunque da dove ci si arriva	
+   */
 	
 	public Rotta(Airport origine, Airport destinazione, double avg) {
 	

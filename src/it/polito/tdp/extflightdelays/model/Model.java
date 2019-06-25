@@ -16,6 +16,10 @@ import org.jgrapht.graph.SimpleWeightedGraph;
 
 import it.polito.tdp.extflightdelays.db.ExtFlightDelaysDAO;
 
+/*
+ * Versione piu snella
+ */
+
 public class Model {
 
 	private Graph <Airport, DefaultWeightedEdge> grafo;
@@ -24,11 +28,15 @@ public class Model {
     private List<Rotta> rotte;
     private Map<Airport, List<Airport>> vicini;
     
-    //parametri ricorsione
-    private Set<Airport> visitati ; //serve per tenere traccia degli aereoporti che tolgo dal parziale (gia considerati)
+    //parametri ricorsione  
+    private Set<Airport> visitati ;
+    /*
+     * In questo caso è meglio utilizzare i nodi piuttosto che gli archi dal momento che il grafo
+     * è aciclico e non orientato
+     */
    
     private int max;
-    private  Path result; 
+    private  List<Airport> result; 
    
     
 	
@@ -86,7 +94,7 @@ public class Model {
 	}
 	
 	
-	public Path cercaCammino(Airport partenza, int max){
+	public List<Airport> cercaCammino(Airport partenza, int max){
 		
 	/*
 	 * Tale metodo ricorsivo deve andare a creare una lista di Airport.
@@ -104,9 +112,10 @@ public class Model {
 	 //Creiamo il parziale
 	  
 	    
-	    Path parziale = new Path(this, partenza);
+	    List<Airport> parziale = new ArrayList<>();
+	    parziale.add(partenza);
 	    
-	    result = new Path(parziale);
+	    result = new ArrayList<>(parziale);
 	    
 	    //all'inizio non ho visitato nessun aereoporto
 	    visitati = new HashSet<>();
@@ -118,30 +127,31 @@ public class Model {
 
 	
 	
-	private void cerca(Path parziale) {
+	private void cerca(List<Airport> parziale) {
 
 		//il concetto di base è che quando si toglie la partenza ho concluso perchè ho provato tutto
 		while(!parziale.isEmpty()) {
 		
 		//Arrivo in un nuovo aereoporto (mai visitato prima (?) ) e mi chiedo dove possa andare
-		Airport aereoporto = parziale.getLast();
+		
 	
 		while(visitaInProfondita(visitati,parziale));
 		
 		//ritorna false se l'aereoporta sopra considerato è stato completamente esplorato!
 		//in tal caso è necessario toglierlo dalla dal parziale e re-iterare
 		
-		if(parziale.getSize()>result.getSize()) {
-			result = new Path(parziale);
-			System.out.format("%.2f max : %d\n",  parziale.getPeso(), max);
+		if(parziale.size()>result.size()) {
+			result = new ArrayList<>(parziale);
 		}
 		
-		parziale.remove(aereoporto);
+	    Airport visitato = parziale.get(parziale.size()-1);
+		
+		parziale.remove(visitato);
+		visitati.add(visitato);    
 		//siamo tornati indietro di un aereoporto
 		
 		//aggiungo ai visitati solo quelli che rimuovo e da cui dunque non devo più passare
 		// dal momento che esploro in profondità
-		visitati.add(aereoporto);
 		
 		}
 		
@@ -149,16 +159,16 @@ public class Model {
       			
 	// metodo a cui passo il parziale e una lista di visitati e mi dice dove posso ancora visitare
 	
-	private boolean visitaInProfondita(Set<Airport> visitati, Path parziale ) {
+	private boolean visitaInProfondita(Set<Airport> visitati, List<Airport> parziale ) {
 		
 		
 		
 		//chiamo questo metodo per vedere tra tutti i vicini quali sia quello dove posso andare 
+		Airport air = parziale.get(parziale.size()-1);
 		
 		//Questo è il metod di visita in profondita
 		
-		for(Airport vicino : vicini.get(parziale.getLast())) {
-			
+		for(Airport vicino : vicini.get(air)) {
 			
 			//non posso tornare indietro e se ho già visitato un vicino non torno a visitarlo
 	           
@@ -166,13 +176,13 @@ public class Model {
 	        	   
 	        	  
 	        	   // valuto se posso realmente andare a visitare il vicino senza sforare con le miglia
-	        	   if(calcolaPesoCon(parziale,vicino)<max) {
+	        	   if(calcolaPesoCon(parziale,vicino)<=max) {
 	        	  
 	        		//se posso visitare il vicino lo aggiungo   
 	                parziale.add(vicino);
-	        	        
+	        	   
 	        	   // vado in profondità
-	        	   cerca(parziale);
+	                visitaInProfondita(visitati, parziale);
 	        	   
 	        	 }
 	        	   
@@ -188,13 +198,13 @@ public class Model {
 	}
 	
 
-	private double calcolaPesoCon(Path parziale, Airport vicino) {
+	private double calcolaPesoCon(List<Airport> parziale, Airport vicino) {
 		
 		
-		if(parziale.getSize()==1)
+		if(parziale.size()==1)
 			return 0.0;
 		
-		List<Airport> cammino = new ArrayList<>(parziale.getCammino());
+		List<Airport> cammino = new ArrayList<>(parziale);
 		cammino.add(vicino);
 		
 		
@@ -211,23 +221,22 @@ public class Model {
 		
 		for(int i= 0; i<cammino.size()-1; i++) {
 			
-			peso+=pesoRotta(cammino.get(i), cammino.get(i+1));
+			Rotta r = null;
+		    for(Rotta rot : rotte) {
+		    	if(rot.getDestinazione().equals(cammino.get(i)) && rot.getOrigine().equals(cammino.get(i+1))) {
+		    		peso+=rot.getAvg();
+		    		break;
+		    	}
+		    	if(rot.getOrigine().equals(cammino.get(i)) && rot.getDestinazione().equals(cammino.get(i+1))) {
+		    		peso+=rot.getAvg();
+		    		break;	
+		    	}
+		    }
 		}
 		
 		return peso;
 	}
 
-	//dati due aereporti mi ricavo il peso dell'arco fra essi
-	private double pesoRotta(Airport a1, Airport a2) {
-
-		DefaultWeightedEdge dwe1 = grafo.getEdge(a1, a2);
-		DefaultWeightedEdge dwe2 = grafo.getEdge(a2, a1);
-		
-		if(dwe1==null)
-		     return grafo.getEdgeWeight(dwe2);
-		  return grafo.getEdgeWeight(dwe1);
-
-	}
 	
 	
 		

@@ -113,14 +113,14 @@ public class ExtFlightDelaysController {
        	  
        	  try {
        		  
-       		Path result = model.cercaCammino(airport, Integer.parseInt(input));
-       			    txtResult.appendText("Il cammino prevede i seguenti Airport ("+result.getSize()+"): \n");
+       		List<Airport> result = model.cercaCammino(airport, Integer.parseInt(input));
+       			    txtResult.appendText("Il cammino prevede i seguenti Airport ("+result.size()+"): \n");
        			   
-       			for(Airport a : result.getCammino()) {
+       			for(Airport a : result) {
        				txtResult.appendText(a+"\n");
        			}
        			
-       			    txtResult.appendText("Il cammino totale è lungo: "+result.getPeso()+" miglia");
+       			    txtResult.appendText("Il cammino totale è lungo: "+model.calcolaPeso(result)+" miglia");
        			
        		
        			    
