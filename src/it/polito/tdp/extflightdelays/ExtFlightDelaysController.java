@@ -8,13 +8,12 @@ package it.polito.tdp.extflightdelays;
 
 import java.net.URL;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
+
 import java.util.ResourceBundle;
 
 import it.polito.tdp.extflightdelays.model.Airport;
 import it.polito.tdp.extflightdelays.model.Model;
-import it.polito.tdp.extflightdelays.model.Path;
+
 import it.polito.tdp.extflightdelays.model.Rotta;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -134,7 +133,7 @@ public class ExtFlightDelaysController {
        	  
          }else {
        	  txtResult.appendText("Si prega di inserire una distanza massima (numero intero) e selezionare un aereoporto, grazie");
-         }
+         } 
 
     }
 

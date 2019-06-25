@@ -214,7 +214,7 @@ public class Model {
 	public List<Rotta> getRotte() {
 		return rotte;
 	}
-
+ 
 	public double calcolaPeso(List<Airport> cammino) {
 		
 		double peso = 0.0;
